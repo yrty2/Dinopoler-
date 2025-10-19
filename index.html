@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ダイノポーラー</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <link rel="icon" href="favicon.ico">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <audio id="BGM1" preload="auto">
+   <source src="Sounds/BGM/katsuo.mp3" type="audio/mp3">
+   <p>not supported</p>
+        </audio>
+        <audio id="BGM2" preload="auto">
+   <source src="Sounds/BGM/asthenosphere.mp3" type="audio/mp3">
+   <p>not supported</p>
+        </audio>
+        <audio id="BGM3" preload="auto">
+   <source src="Sounds/BGM/Dinopoler.mp3" type="audio/mp3">
+   <p>not supported</p>
+        </audio>
+        <audio id="BGM4" preload="auto">
+   <source src="Sounds/BGM/pacific.mp3" type="audio/mp3">
+   <p>not supported</p>
+        </audio>
+        <audio id="BGM5" preload="auto">
+   <source src="Sounds/BGM/Green Algae.mp3" type="audio/mp3">
+   <p>not supported</p>
+        </audio>
+        <canvas class="canvas" width="0" height="0"></canvas>
+        <div id="description">
+        <div id="uenoyatsu">
+        <a href="https://github.com/yrty2"><img src="yirty2.webp" width=3% height=3%><lb>Yirty</lb>2</a>　　　　　<counter>今日のお客さん<t id="populationCount"></t>人</counter>
+        </div>
+        <hr>
+        <div class="sidebar">
+        <img src="senzai.png" width="327" height="327"/><br>
+        Dinopoler ver0.1d<hr>
+        リーダーボード<br><input id="nameinp" type="text" placeholder="名前を入力してください" /><input type="button" value="登録" onclick="username=document.getElementById('nameinp').value" /><br>順位.名前 スコア<br><t id="rank"></t></div>
+        <div class="content">
+            <div class="innercontent">
+        <div id="pic">
+            <img src="headerimage.png" alt="Dinopoler/Created By Yirty2">
+        </div>
+        <div id="cen">
+            <br>
+            <br>Dinopoler　おたまじゃくし突進アクション<br>
+        画像クリックでスタート
+        </div>
+        <hr>
+        ＊どんなゲーム？＊<br>
+        <br>
+        おたまじゃくしが微生物に体当たりして潮だまりを生き残るゲームです。
+        <br><br>ストーリー<br>
+        海面上昇により、かつての人類の文明は完全にことつきた。それどころか地球のほとんどは海になってしまい、エベレスト山頂は唯一の島となっている。<br>
+        沈みゆく地球の海でクラゲたちは驚くほど多様化した。かなり深くなった海にクラゲのみが適応し、ほかの生物はほぼ絶滅してしまった。<br>
+        その中でおたまじゃくしは脊椎動物の最後の生き残りであった...。
+        <hr>
+        ＊操作方法＊<br>
+<br>
+        [W]:上へ進む<br>
+        [A]:左へ進む<br>
+        [S]:下へ進む<br>
+        [D]:右へ進む<br>
+        [Z],[Enter],[Space]:決定/突進<br>
+        [Q]:ポーズ
+        <hr>
+        ＊Screen Shots＊※開発段階の画像です<br>
+        <img src="sc1.png" width=50% height=50%>
+        </div>
+        </div>
+            <div class="foot">
+                ©2025 by Yirty2 All Rights Reserved.
+            </div>
+        </div>
+        <script type="text/javascript" src="../mathematics.lib.js"></script>
+        <script type="text/javascript" src="webstorage.js"></script>
+        <script type="text/javascript" src="proceduralBackGround.js"></script>
+        <script type="text/javascript" src="modelLoader.js"></script>
+        <script type="text/javascript" src="main.js"></script>
+        <script type="text/javascript" src="gpu.js"></script>
+        <script type="text/javascript" src="BGMplayer.js"></script>
+    </body>
+</html>
