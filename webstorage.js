@@ -19,7 +19,7 @@ async function getrecord(){
     var ran=document.getElementById("rank");
     leaderboard=storage.getItem("leaderboard");
     if(leaderboard=="undefined" || leaderboard==null || leaderboard==undefined){
-        leaderboard=[];
+        leaderboard="[]";
     }
     leaderboard=JSON.parse(leaderboard);
     for(let k=leaderboard.length-1; k>=0; --k){
