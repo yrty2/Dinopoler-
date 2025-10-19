@@ -18,7 +18,7 @@ function record(){
 async function getrecord(){
     var ran=document.getElementById("rank");
     leaderboard=storage.getItem("leaderboard");
-    if(leaderboard=="undefined" || leaderboard==null || leaderboard==undefined){
+    if(leaderboard=="undefined" || leaderboard=="" || leaderboard==null || leaderboard==undefined){
         leaderboard="[]";
     }
     leaderboard=await JSON.parse(leaderboard);
