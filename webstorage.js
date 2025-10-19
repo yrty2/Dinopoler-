@@ -22,6 +22,9 @@ async function getrecord(){
         leaderboard="[]";
     }
     leaderboard=JSON.parse(leaderboard);
+    if(leaderboard==""){
+        leaderboard=[];
+    }
     for(let k=leaderboard.length-1; k>=0; --k){
         ran.innerHTML+=`${leaderboard.length-k}.${leaderboard[k].name}  ${Math.round(leaderboard[k].score)}<br>`;
     }
