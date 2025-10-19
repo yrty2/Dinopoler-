@@ -21,7 +21,7 @@ async function getrecord(){
     if(leaderboard=="undefined" || leaderboard==null || leaderboard==undefined){
         leaderboard="[]";
     }
-    leaderboard=JSON.parse(leaderboard);
+    leaderboard=await JSON.parse(leaderboard);
     if(leaderboard==""){
         leaderboard=[];
     }
