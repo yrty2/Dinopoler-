@@ -662,7 +662,17 @@ timerevent(e.info.boom,a=>{
     }else{
     if(playercirclecollision(e.seed,game.tidalpower.range+e.info.extrarange)){
         if(mkeys.submit && game.tidalpower.value>0 && e.info.name!="tate" && (e.info.name!="hugu_enemy" || !e.info.danger)){
-        play(game.combo.sound[clamp(Math.floor(game.combo.chain/3),0,game.combo.sound.length-1)],1);
+            var sndtype="";
+            var sndv=1;
+            if(e.info.name=="jelly_enemy"){
+                sndtype="ベル";
+                sndv=0.9;
+            }
+            if(e.info.name=="tatecircle_enemy"){
+                sndtype="ベース";
+                sndv=0.8;
+            }
+        play(game.combo.sound[clamp(Math.floor(game.combo.chain/3),0,game.combo.sound.length-1)]+sndtype,sndv);
         const gain=e.info.score*Math.pow(game.combo.scoreMultiplication,game.combo.chain);
         print("scoregain",e.mov,true,numbers(gain));
         if(e.info.score==1000){
@@ -917,7 +927,7 @@ function pointAction(e){
             game.needed+=4;
             game.phase++;
             game.maxEnemy+=4;
-            play("チャイム",1);
+            play("チャイム2",0.2);
             nextLevel();
         }
     }
@@ -1320,6 +1330,7 @@ function decision(){
 }
 const upgradeList=["tidalpower","goldenSpawn","hp2","itemSpawn","enemySpawn"];
 function upgradedecision(){
+    play("チャイム",1);
     play("てれれんアッパー",1);
     upgrading=true;
     decdisplay=[0];

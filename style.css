@@ -4,15 +4,21 @@ body{
             font-size:20px;
         }
         .canvas{
+            cursor:none;
             position:absolute;
             left:0px;
             bottom:0px;
         }
         #pic{
+            cursor:pointer;
             text-align: center;
         }
+        c{
+            color:#7ee9ff;
+        }
         #uenoyatsu{
-            background-color:#aa2f00
+            background-color:#aa2f00;
+            outline: 10px solid #7c2300;
         }
         #cen{
             text-align: center;
@@ -21,13 +27,13 @@ body{
             font-size:30px;
             position:absolute;
             width: 330px;
-            height:1200px;
+            height:1500px;
             background-color: #007faa;
             box-sizing: border-box;
             border: 2px solid white;
         }
         .innercontent {
-            top:120px;
+            cursor:default;
             position:absolute;
             left:350px;
             border: 4px solid white;
@@ -35,7 +41,20 @@ body{
         #nameinp{
             background-color:#007494;
             color:azure;
-            
+            outline: 3px solid white;
+            position:absolute;
+            left:10px;
+            width:120px;
+            height:30px;
+        }
+        #namesbm{
+            background-color:#007494;
+            color:azure;
+            outline: 3px solid white;
+            position:absolute;
+            left:140px;
+            width:70px;
+            height:30px;
         }
         .foot{
             background-color: navy;
