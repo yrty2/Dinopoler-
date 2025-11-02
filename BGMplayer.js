@@ -9,6 +9,7 @@ function play(name,volume){
 function setBGM(name,volume,loop){
     for(const g of BGMList){
         g.loop=false;
+        g.currentTime=0;
         g.pause();
     }
     const a=document.getElementById(name);
@@ -19,7 +20,7 @@ function setBGM(name,volume,loop){
 function BGMtest(){
     function test(id,to,volume){
         const a=BGMList[id-1];
-        if(a.currentTime>=a.duration){
+        if(a.currentTime>=a.duration && a.loop){
             a.currentTime=0;
             setBGM(`BGM${to}`,volume,true);
         }
@@ -28,4 +29,10 @@ function BGMtest(){
     test(1,4,0.2);
     test(4,5,0.2);
     test(5,1,0.1);
+}
+function stopBGM(){
+    for(const g of BGMList){
+        g.loop=false;
+        g.pause();
+    }
 }

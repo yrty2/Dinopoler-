@@ -1,3 +1,4 @@
+var debug=false;
 const model=[];
 async function loadModel(name,fix){
     const res=await fetch(`model/${name}.json`);
@@ -8,6 +9,14 @@ async function loadModel(name,fix){
     console.log(`${name}のフェッチに成功しました。`);
     const data=await res.json();
     const u=[];
+    if(data.version=="1.0.1"){
+    for(let k=0; k<data.matrix.length/data.stride; ++k){
+        u.push({
+            position:vec.dec([data.matrix[data.stride*k+3],data.matrix[data.stride*k+4]],fix),
+            color:math.hsl2rgb(180*Math.atan2(data.matrix[data.stride*k+1],data.matrix[data.stride*k])/Math.PI,parseFloat(data.matrix[data.stride*k+2])/100,Math.hypot(data.matrix[data.stride*k+1],data.matrix[data.stride*k])/100)
+        });
+    }
+    }else{
     for(const d of data){
         if(!d.alpha){
         u.push({
@@ -15,6 +24,7 @@ async function loadModel(name,fix){
             color:math.hsl2rgb(180*Math.atan2(d.z.imag,d.z.real)/Math.PI,parseFloat(d.w)/100,Math.hypot(d.z.real,d.z.imag)/100)
         })
         }
+    }
     }
     model.push({
         data:u,
@@ -42,9 +52,12 @@ function add(position,modelname,info,size,backward,direction){
         playerSeed=f;
         game.playerModel=modelname;
         game.playerDirection=direction;
+        if(game.ashi){
+            modelname+="+ashi";
+        }
     }
     if(backward){
-    entity=union([{name:modelname,rot:0,direction:direction,seed:f,mov:position,info:info,scale:size}],entity);
+    entity=union([{name:modelname,rot:0,seed:f,direction:direction,mov:position,info:info,scale:size}],entity);
     }else{
         entity.push({name:modelname,rot:0,seed:f,direction:direction,mov:position,info:info,scale:size});
     }
@@ -59,7 +72,11 @@ async function parsemodels(){
     for(const m of modelnames){
         if(!m.preload){
         sintyoku();
+        if(debug){
+        loadModel(m.name,m.pos);
+        }else{
         await loadModel(m.name,m.pos);
+        }
         }
     }
 }
@@ -111,21 +128,35 @@ addModel("otama45",[8,8]);
 addModel("otama45_2",[8,8]);
 addModel("otama45_3",[8,8]);
 addModel("otama0",[8,8]);
-addModel("otama0_1",[8,8]);
 addModel("otama0_2",[8,8]);
 addModel("otama0_3",[8,8]);
-addModel("otama0_4",[8,8]);
-addModel("otama0_5",[8,8]);
-addModel("otama0_6",[8,8]);
 addModel("otama30",[8,8]);
 addModel("otama60",[8,8]);
 addModel("otama_damaged",[8,8]);
+addModel("otama90+ashi",[8,8]);
+addModel("otama90_2+ashi",[8,8]);
+addModel("otama90_3+ashi",[8,8]);
+addModel("otama45+ashi",[8,8]);
+addModel("otama45_2+ashi",[8,8]);
+addModel("otama45_3+ashi",[8,8]);
+addModel("otama0+ashi",[8,8]);
+addModel("otama0_2+ashi",[8,8]);
+addModel("otama0_3+ashi",[8,8]);
+addModel("otama30+ashi",[8,8]);
+addModel("otama60+ashi",[8,8]);
+addModel("otama_damaged+ashi",[8,8]);
 addModel("circle",[8,8]);
 addModel("circle_rot1",[8,8]);
 addModel("circle_rot2",[8,8]);
 addModel("circle_boom1",[8,8]);
 addModel("circle_boom2",[8,8]);
 addModel("circle_boom3",[8,8]);
+addModel("strong_circle",[8,8]);
+addModel("strong_circle_rot1",[8,8]);
+addModel("strong_circle_rot2",[8,8]);
+addModel("strong_circle_boom1",[8,8]);
+addModel("strong_circle_boom2",[8,8]);
+addModel("strong_circle_boom3",[8,8]);
 addModel("あお粒子",[8,8]);
 addModel("きぴかぴか",[8,8]);
 addModel("ぴかぴか",[8,8]);
@@ -186,11 +217,14 @@ addModel("hoya3",[8,8]);
 addModel("泡",[8,8]);
 addModel("きらめき",[8,8]);
 addModel("きらめき2",[8,8]);
-addModel("あかるい",[34,32]);
 addModel("jelly1",[8,8]);
 addModel("jelly2",[8,8]);
 addModel("jelly3",[8,8]);
 addModel("jelly4",[8,8]);
+addModel("strong_jelly1",[8,8]);
+addModel("strong_jelly2",[8,8]);
+addModel("strong_jelly3",[8,8]);
+addModel("strong_jelly4",[8,8]);
 addModel("golden1",[8,8]);
 addModel("golden2",[8,8]);
 addModel("golden3",[8,8]);
@@ -201,6 +235,9 @@ addModel("レ",[8,8]);
 addModel("ベ",[8,8]);
 addModel("ル",[8,8]);
 addModel("card",[8,8]);
+addModel("cardanm1",[8,8]);
+addModel("cardanm2",[8,8]);
+addModel("cardanm3",[8,8]);
 addModel("gun",[8,8]);
 addModel("gem",[8,8]);
 addModel("jellygem",[8,8]);
@@ -218,7 +255,95 @@ addModel("hugu_boom3",[8,8]);
 addModel("jelly_boom1",[8,8]);
 addModel("jelly_boom2",[8,8]);
 addModel("jelly_boom3",[8,8]);
+addModel("strong_jelly_boom1",[8,8]);
+addModel("strong_jelly_boom2",[8,8]);
+addModel("strong_jelly_boom3",[8,8]);
 addModel("tidalpower",[8,8]);
 addModel("crystalTidalpower",[8,8]);
 addModel("crystalCube",[8,8]);
+addModel("Plate",[8,8]);
+addModel("sentaku",[8,8]);
+addModel("は",[8,8]);
+addModel("じ",[8,8]);
+addModel("ま",[8,8]);
+addModel("り",[8,8]);
+addModel("め",[8,8]);
+addModel("る",[8,8]);
+addModel("タ",[8,8]);
+addModel("イ",[8,8]);
+addModel("ダ",[8,8]);
+addModel("パ",[8,8]);
+addModel("ワ",[8,8]);
+addModel("ょ",[8,8]);
+addModel("う",[8,8]);
+addModel("ひ",[8,8]);
+addModel("が",[8,8]);
+addModel("ぶ",[8,8]);
+addModel("な",[8,8]);
+addModel("た",[8,8]);
+addModel("の",[8,8]);
+addModel("さ",[8,8]);
+addModel("お",[8,8]);
+addModel("く",[8,8]);
+addModel("こ",[8,8]);
+addModel("い",[8,8]);
+addModel("ゃ",[8,8]);
+addModel("し",[8,8]);
+addModel("か",[8,8]);
+addModel("を",[8,8]);
+addModel("ろ",[8,8]);
+addModel("よ",[8,8]);
+addModel("や",[8,8]);
+addModel("す",[8,8]);
+addModel("つ",[8,8]);
+addModel("っ",[8,8]);
+addModel("と",[8,8]);
+addModel("ふ",[8,8]);
+addModel("け",[8,8]);
+addModel("げ",[8,8]);
+addModel("ハ",[8,8]);
+addModel("ら",[8,8]);
+addModel("ト",[8,8]);
+addModel("コ",[8,8]);
+addModel("ン",[8,8]);
+addModel("テ",[8,8]);
+addModel("ィ",[8,8]);
+addModel("二",[8,8]);
+addModel("ュ",[8,8]);
+addModel("？",[8,8]);
+addModel("S",[8,8]);
+addModel("A",[8,8]);
+addModel("B",[8,8]);
+addModel("C",[8,8]);
+addModel("Dtitle",[8,8]);
+addModel("E",[8,8]);
+addModel("べ",[8,8]);
+addModel("も",[8,8]);
+addModel("た",[8,8]);
+addModel("ラ",[8,8]);
+addModel("ナ",[8,8]);
+addModel("！",[8,8]);
+addModel("せ",[8,8]);
+addModel("ノ",[8,8]);
+addModel("ゴ",[8,8]);
+addModel("ミ",[8,8]);
+addModel("き",[8,8]);
+addModel("て",[8,8]);
+addModel("ず",[8,8]);
+addModel("ご",[8,8]);
+addModel("デ",[8,8]);
+addModel("だ",[8,8]);
+addModel("G",[8,8]);
+addModel("Yname",[8,8]);
+addModel("iname",[8,8]);
+addModel("rname",[8,8]);
+addModel("tname",[8,8]);
+addModel("yname",[8,8]);
+addModel("カエルの過程1",[32,32]);
+addModel("カエルの過程2",[32,32]);
+addModel("カエルの過程3",[32,32]);
+addModel("newLife",[32,32]);
+addModel("sintyoku",[8,8]);
+addModel("cube3",[8,8]);
+addModel("crystalCube2",[8,8]);
 preload();

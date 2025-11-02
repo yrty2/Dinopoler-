@@ -1,5 +1,5 @@
 const canvas=document.querySelector(".canvas");
-canvas.style.border="2px solid";
+//canvas.style.border="2px solid";
 var neighbor=[];//近傍
 var entity=[];
 var camera=[0,0];
@@ -10,6 +10,7 @@ var gametime;
 var preloaded=false;
 var zclicked=false;
 var deciding=false;
+var restarting=false;
 var aspect=1;
 var key="";
 const startTime=Date.now();
@@ -17,10 +18,14 @@ var end=false;
 var lastRenderTime=0;
 const fps=120;
 var decdisplay=[];
+var rstCount=0;
 var initialized=false;
+var decTimer=0;
+var titleCount=0;
 var upgrading=false;
 var transformed=false;
-var clearValue={r:0.42,g:0.8,b:0.855,a:1.0};
+var isTitlePushed=false;
+var clearValue={r:0.21,g:0.4,b:0.427,a:1.0};
 var light=[1,1,1];
 var fired=false;
 var isTitle=true;
@@ -40,7 +45,8 @@ var mkeys={
     left:false,
     submit:false
 };
-const itemList=["gem","jellygem","midnight","lightsphere","gun","fishgem"]
+const itemList=["gem","jellygem","midnight","lightsphere","gun","fishgem"];
+const itemDescriptions=["タイダルパワーのかいふくをはやめる","タイダルパワーのしょうひがはんぶんになる","タイダルパワーのかいふくをはやめる","くらげをたおすとタイダルパワーが5かいふく","とっしんがはやくなり、よろいをかんつうする","およげるようになる"];
 var vertex=[];
 class Game{
     constructor(generation){
@@ -69,16 +75,24 @@ class Game{
     }
     this.score=0;
     this.scoreDisplay=0;
-    this.goldenRate=1;
+    this.goldenRate=0.33;
     this.undesire=0.1;
     this.minradius=2.5;
     this.radius=3.5;
     this.enemy=0;
     this.maxEnemy=10;
     this.item=0;
-    this.maxItem=30;
+    this.anotherEnding=false;
+    this.maxItem=100;
     this.hp=4;
+    this.continueCount=2;
     this.maxhp=4;
+    this.ending={
+        timer1:0,
+        timer2:0,
+        timer3:0
+    }
+    this.ashi=false;
     this.tidalpower={
         speedmultiplication:4,
         value:35,
@@ -106,11 +120,12 @@ class Game{
     this.progression=0;
     this.needed=4;
     this.phase=0;
+    this.hyouka="エラー";
     this.pinkshell=0;
     this.redcoral=0;
     this.conch=0;
     this.items=[];
-    this.itemLost=5;
+    this.itemLost=3.5;
     }
     changeMaxHp(value){
         this.maxhp=value;
@@ -120,7 +135,7 @@ class Game{
             }
         }
         for(let k=0; k<value; ++k){
-            add([0.95/aspect-0.11*k,-0.8],"heart",{name:"life"+(k+1),dynamic:false,attribute:"util",hide:false},0.6);
+            add([0.95/aspect-0.11*k,-0.65],"heart",{name:"life"+(k+1),dynamic:false,attribute:"util",hide:false},0.6);
         }
     }
 }
@@ -150,16 +165,21 @@ pic.addEventListener("click",e=>{
     }
 });
 window.addEventListener("keydown",e=>{
+    if(game.ending.reproduction && !game.ending.birth){
+        placeegg();
+    }
     key=e.code;
     if(e.code=="KeyW" || e.code=="ArrowUp"){
         mkeys.up=true;
     }
     if(e.code=="KeyA" || e.code=="ArrowLeft"){
         mkeys.left=true;
-        if(deciding){
+        if(deciding && decTimer==0){
                 select=math.mod(select-1,3);
-            while(!entity[entity.findIndex(a=>a.info.disId==select)].info.available){
+            var idd=entity.findIndex(a=>a.info.disId==select);
+            while(idd!=-1 && !entity[idd].info.available){
                 select=math.mod(select+1,3);
+                idd=entity.findIndex(a=>a.info.disId==select);
             }
             updatedecdisplay();
         }
@@ -171,22 +191,30 @@ window.addEventListener("keydown",e=>{
         mkeys.right=true;
         if(deciding){
                 select=math.mod(select+1,3);
-            while(!entity[entity.findIndex(a=>a.info.disId==select)].info.available){
+            var idd=entity.findIndex(a=>a.info.disId==select);
+            while(idd!=-1 && !entity[idd].info.available){
                 select=math.mod(select-1,3);
+                idd=entity.findIndex(a=>a.info.disId==select);
             }
             updatedecdisplay();
         }
     }
     if(e.code=="KeyT"){
-        game.tidalpower.range=2;
+        //game.tidalpower.range=2;
         if(transformed){
             copy2clipboard();
+            play("チャイム2",1);
         }
     }
-    if(e.code=="KeyI"){
-        game.redcoral+=10;
-        upgradedecision();
+    if(e.code=="KeyG"){
+        if(transformed){
+        restarting=true;
+        }
     }
+    /*if(e.code=="KeyL"){
+        game.redcoral+=20;
+        preupgdicision();
+    }*/
     if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
         if(!zclicked && modelLoaded){
         submit();
@@ -195,6 +223,7 @@ window.addEventListener("keydown",e=>{
         zclicked=true;
     }
     if(e.code=="KeyQ"){
+        if(initialized){
         pose=!pose;
         entityna("pose",a=>{
         a.info.hide=!a.info.hide;
@@ -205,6 +234,7 @@ window.addEventListener("keydown",e=>{
             play("てれれんダウナー",1);
         }
     }
+}
 });
 window.addEventListener("keyup",e=>{
     if(e.code=="KeyW" || e.code=="ArrowUp"){
@@ -226,11 +256,14 @@ window.addEventListener("keyup",e=>{
     key="";
 });
 function submit(){
-    if(isTitle){
-        gamestart();
-        gametime=Date.now();
+    if(!isTitlePushed){
+        play("スタート",1);
+        entityn("startp",a=>{
+            modelchange(a.seed,"sentaku",true);
+        });
+        isTitlePushed=true;
     }
-    if(deciding){
+    if(deciding && decTimer==0){
         if(upgrading){
             selectUpgrade();
         }else{
@@ -240,7 +273,6 @@ function submit(){
 }
 async function titleScreen(){
     initialized=true;
-    welcome();
     const desc=document.getElementById("description");
     desc.innerHTML="";
     await parsemodels();
@@ -249,25 +281,64 @@ async function titleScreen(){
     }
     modelLoaded=true;
     add([0,0],"egg",{name:"egg"});
-    add([-0.66,-0.5],"D",{});
-    add([-0.5,-0.5],"i",{});
-    add([-0.35,-0.5],"n",{});
-    add([-0.15,-0.5],"o",{});
-    add([0.05,-0.5],"p",{});
-    add([0.25,-0.5],"o",{});
-    add([0.45,-0.5],"l",{});
-    add([0.53,-0.5],"e",{});
-    add([0.73,-0.5],"r",{});
+    add([-0.66,-0.5],"Dtitle",{name:"Tt"});
+    add([-0.5,-0.5],"i",{name:"Tt"});
+    add([-0.35,-0.5],"n",{name:"Tt"});
+    add([-0.15,-0.5],"o",{name:"Tt"});
+    add([0.05,-0.5],"p",{name:"Tt"});
+    add([0.25,-0.5],"o",{name:"Tt"});
+    add([0.45,-0.5],"l",{name:"Tt"});
+    add([0.53,-0.5],"e",{name:"Tt"});
+    add([0.73,-0.5],"r",{name:"Tt"});
+
+    add([0.8,0],"Plate",{name:"startp",id:0},1.8);
+    printL("startbtn",[0.85,0.06],false,["は","じ","め","る"]);
     setBGM("BGM3",0.4,true);
+    welcome();
+    console.log("何か企んでるね？");
 }
 function titleAction(){
     entityn("egg",a=>{
 a.mov=[0,Math.cos(Date.now()/1000)/50];
     });
+    const delay=30;
+    const maxcount=60;
+    if(isTitlePushed && isTitle){
+        if(delay<titleCount){
+        grow=1-Math.sin(Math.PI*(titleCount-delay)/maxcount);
+        }
+        if(titleCount%5==0){
+            entityn("startp",a=>{
+                if(a.name=="Plate"){
+                    modelchange(a.seed,"sentaku",true);
+                }else{
+                    modelchange(a.seed,"Plate",true);
+                }
+            });
+        }
+        titleCount++;
+        if(titleCount==delay+Math.round(maxcount/2)){
+            prestart();
+        }
+        if(titleCount>delay+maxcount){
+            gamestart();
+        }
+    }
 }
-function gamestart(){
-    isTitle=false;
-    entityn("egg",a=>{
+function prestart(nextgen){
+            entityn("egg",a=>{
+        deleteEntity(a.seed);
+    });
+    entityna("Tt",a=>{
+        deleteEntity(a.seed);
+    });
+    entityn("startp",a=>{
+        deleteEntity(a.seed);
+    });
+    entityn("otherp",a=>{
+        deleteEntity(a.seed);
+    });
+    entityna("startbtn",a=>{
         deleteEntity(a.seed);
     });
     printL("pose",[0,0],false,["ポ","ー","ズ"]);
@@ -286,9 +357,15 @@ function gamestart(){
     add([0.95/aspect-0.52,0.9],"tidalpower",{name:"tidalpower",dynamic:false,attribute:"util",hide:false,gray:false},0.3);
 
     for(let k=0; k<game.maxhp; ++k){
-    add([0.95/aspect-0.11*k,-0.8],"heart",{name:"life"+(k+1),dynamic:false,attribute:"util",hide:false},0.6);
+    add([0.95/aspect-0.11*k,-0.65],"heart",{name:"life"+(k+1),dynamic:false,attribute:"util",hide:false},0.6);
     }
-    play("スタート",1);
+    for(let k=0; k<5; ++k){
+    add([0.95/aspect+0.11*(k-4),-0.8],"cube_gray2",{name:"progressbar"+(k+1),dynamic:false,attribute:"util",hide:false},0.6);
+    }
+}
+function gamestart(){
+    isTitle=false;
+    gametime=Date.now();
     setBGM("BGM1",0.1,true);
 }
 //アニメーションフレーム
@@ -305,6 +382,29 @@ aspect=window.innerHeight/window.innerWidth;
         if(!pose){
             if(!end){
         spawnAction();
+            }
+            if(restarting){
+                restartAction();
+            }
+            if(decTimer>0){
+                decTimer--;
+                if(decTimer==0){
+                    if(upgrading){
+                        upgradedecision();
+                    }else{
+                    decision();
+                    }
+                }
+                if(decTimer==10){
+                    entityna("dammyc",e=>{
+                        modelchange(e.seed,"cardanm1");
+                    });
+                }
+                if(decTimer==20){
+                    entityna("dammyc",e=>{
+                        modelchange(e.seed,"cardanm2");
+                    });
+                }
             }
             var otam;
         for(const e of entity){
@@ -363,7 +463,7 @@ function playerAction(e){
     var tidaldush=false;
     var s=0.01;
     game.otamamove.interval=5;
-    if(mkeys.submit && game.tidalpower.value>0 && game.hidan.anime<5){
+    if(mkeys.submit && game.tidalpower.value>0 && game.hidan.anime<15){
         game.otamamove.interval=3;
         timerevent(game.tidalpower.consumption,t=>{
             game.tidalpower.value--;
@@ -380,7 +480,7 @@ function playerAction(e){
         game.tidalpower.value++;
         });
     }
-    if(game.hidan.anime<5){
+    if(game.hidan.anime<15){
     if(!tidaldush || has("fishgem")){
     if(mkeys.right || mkeys.left || mkeys.up || mkeys.down){
         move=true;
@@ -541,6 +641,7 @@ function playerAction(e){
             e.info.hide=!e.info.hide;
             t.anime--;
             if(t.anime==0){
+            e.info.hide=false;
             t.trigger=false;
             }
         });
@@ -554,8 +655,11 @@ function inrange(m,v,M){
 function modelchange(seed,name,backward){
     let id=entity.findIndex(e=>e.seed==seed);
     if(id!=-1){
-    add(entity[id].mov,name,entity[id].info,entity[id].scale,backward,entity[id].direction);
+    add(entity[id].mov,name,entity[id].info,entity[id].scale,false,entity[id].direction);
     deleteEntityi(id);
+    }
+    if(backward){
+        entity=union([entity[entity.length-1]],entity.slice(0,entity.length-1));
     }
 }
 function timerevent(p,callback){
@@ -565,7 +669,6 @@ function timerevent(p,callback){
     }
     p.timer++;
 }
-//enemy配列が必要。
 function spawnAction(){
     //スポーン
     var loop=0;
@@ -600,7 +703,7 @@ function deleteEntityi(id){
 }
 function playercirclecollision(seed,range,type){
     //別の方法に変える。
-    if(type=="point"){
+    if(type=="point" || type=="item"){
     for(const e of entity){
     if(e.seed==seed){
     if(vec.length(vec.sum(camera,e.mov))<range){
@@ -664,7 +767,7 @@ timerevent(e.info.boom,a=>{
         if(mkeys.submit && game.tidalpower.value>0 && e.info.name!="tate" && (e.info.name!="hugu_enemy" || !e.info.danger)){
             var sndtype="";
             var sndv=1;
-            if(e.info.name=="jelly_enemy"){
+            if(e.info.name=="jelly_enemy" || e.info.name=="strong_jelly_enemy"){
                 sndtype="ベル";
                 sndv=0.9;
             }
@@ -673,10 +776,23 @@ timerevent(e.info.boom,a=>{
                 sndv=0.8;
             }
         play(game.combo.sound[clamp(Math.floor(game.combo.chain/3),0,game.combo.sound.length-1)]+sndtype,sndv);
-        const gain=e.info.score*Math.pow(game.combo.scoreMultiplication,game.combo.chain);
+        var multiplicationfactor=Math.pow(game.combo.scoreMultiplication,game.combo.chain);
+            //clamp
+        if(multiplicationfactor>game.combo.mulmax){
+            multiplicationfactor=game.combo.mulmax;
+        }
+        const gain=e.info.score*multiplicationfactor;
         print("scoregain",e.mov,true,numbers(gain));
+        if(has("lightsphere")){
+            if(game.tidalpower.max>=game.tidalpower.value+5){
+                game.tidalpower.value+=5;
+            }else{
+                game.tidalpower.value=game.tidalpower.max;
+            }
+        }
         if(e.info.score==1000){
-            decision();
+            predicision();
+            //decision();
         }
         game.score+=gain;
         game.combo.chain++;
@@ -708,7 +824,7 @@ timerevent(e.info.boom,a=>{
         if(!game.hidan.trigger && !game.immune.value){
         game.hidan.trigger=true;
         game.hidan.timer=0;
-        game.hidan.anime=10;
+        game.hidan.anime=20;
         game.hidan.speed=velocity+0.01;
         game.hidan.angle=Math.atan2(camera[1]+e.mov[1],camera[0]+e.mov[0]);
         game.hp--;
@@ -785,8 +901,6 @@ function utility(){
     print("pinkshelldis",[-1.3,0.9],false,union(["pinkshell"],numbers(game.pinkshell)));
     print("conchdis",[-1,0.9],false,union(["conch"],numbers(game.conch)));
     print("redcoraldis",[-0.7,0.9],false,union(["redcoral"],numbers(game.redcoral)));
-        }else{
-            printL("scoredis",[0,-0.33],false,union(["ス","コ","ア"],numbers(game.score)));
         }
     if(game.score>game.scoreDisplay){
         game.scoreDisplay+=(game.score-game.scoreDisplay)/10;
@@ -829,20 +943,26 @@ function utility(){
         });
     }
     if(end){
+        if(game.anotherEnding){
+            anotherEndAction();
+        }else{
             entityn("otamaend",a=>{
                 if(!transformed){
                     a.mov[1]+=0.003;
                 a.rot+=0.2;
-                a.rot*=1.05;
+                a.rot*=1.03;
                 light[0]*=0.978;
                 light[1]*=0.978;
                 light[2]*=0.989;
                 particle(vec.dec(a.mov,camera),1,a.rot/1000+0.1);
                     //sg+=0.01;
-                if(a.rot>12*360){
+                if(a.rot>6*360){
+                    printL("scoredis2",[0,-0.33],false,union(["ス","コ","ア"],numbers(game.score)));
+                    printL("hyouka",[0,0],false,barabara(game.hyouka));
                     print("clip",[-0.5/aspect,0.9],false,["T","キ","ー","semic","ク","リ","ッ","プ","ボ","ー","ド","に","ほ","ぞ","ん"])
+                    print("continue?",[0.5/aspect,0.9],false,["G","キ","ー","semic","コ","ン","テ","ィ","二","ュ","ー","、","の","こ","り",""+game.continueCount-game.generation,"回"]);
                     transformed=true;
-                    //add([0,0.33],"あかるい",{attribute:"util",dynamic:false});
+                    setBGM("BGM2",0.4,false);
                     shinyparticle(vec.dec(a.mov,camera),6,0);
                     modelchange(a.seed,"hoya");
                 }
@@ -853,6 +973,7 @@ function utility(){
                     });
                 }
             });
+            }
         }
 }
 function mother(mid){
@@ -922,6 +1043,7 @@ function pointAction(e){
     if(playercirclecollision(e.seed,0.1,"point")){
         deleteEntity(e.seed);
         game.progression++;
+        play("click",0.1);
         if(game.progression>=game.needed){
             game.progression=0;
             game.needed+=4;
@@ -952,7 +1074,7 @@ function itemAction(e){
         deleteEntity(e.seed);
         game.item--;
         }
-    if(playercirclecollision(e.seed,0.2)){
+    if(playercirclecollision(e.seed,0.2,"item")){
         if(e.info.name=="pinkshell_item"){
             game.pinkshell++;
         }
@@ -964,6 +1086,7 @@ function itemAction(e){
         }
         print("scoregain",e.mov,true,numbers(100));
         game.score+=100;
+        play("click",0.3);
         game.item--;
         deleteEntity(e.seed);
     }
@@ -984,6 +1107,15 @@ function utilAction(e){
     if(e.name=="cube2" && has("midnight")){
         modelchange(e.seed,"crystalCube");
     }
+    if(e.name=="cube2" && has("gem")){
+        modelchange(e.seed,"cube3");
+    }
+    if(e.name=="cube3" && has("midnight")){
+        modelchange(e.seed,"crystalCube2");
+    }
+    if(e.name=="crystalCube" && has("gem")){
+        modelchange(e.seed,"crystalCube2");
+    }
     for(let k=1; k<6; ++k){
         if(game.tidalpower.value>k*game.tidalpower.max/6 && e.info.name==`tidalpower${k}` && e.info.gray){
                 modelchange(e.seed,"cube2");
@@ -991,6 +1123,13 @@ function utilAction(e){
         }else if(game.tidalpower.value<=k*game.tidalpower.max/6 && e.info.name==`tidalpower${k}` && !e.info.gray){
                 modelchange(e.seed,"cube_gray2");
                 e.info.gray=true;
+        }
+    }
+    for(let k=1; k<=5; ++k){
+        if(game.progression/game.needed>=(k)/6 && e.info.name==`progressbar${k}` && e.name=="cube_gray2"){
+            modelchange(e.seed,"sintyoku");
+        }else if(game.progression/game.needed<(k)/6 && e.info.name==`progressbar${k}` && e.name=="sintyoku"){
+            modelchange(e.seed,"cube_gray2");
         }
     }
     if(e.info.name=="scoregain"){
@@ -1077,7 +1216,7 @@ function printL(name,posture,dynamic,a){
 }
 function nextLevel(){
     if(math.mod(game.phase,3)==0){
-        upgradedecision();
+        preupgdicision();
     }else{
         if(game.hp<game.maxhp){
             game.hp++;
@@ -1099,7 +1238,7 @@ function nextLevel(){
 function ending(){
     record();
     end=true;
-    setBGM("BGM2",0.4,false);
+    stopBGM();
     for(const e of entity){
         deleteEntity(e.seed);
     }
@@ -1109,6 +1248,17 @@ function ending(){
         anime:0,
         value:["hoya","hoya2","hoya3"]
     }});
+    //評価
+    for(const u of udemae){
+        if(game.score>=u.score){
+            game.hyouka=u.name;
+            break;
+        }
+    }
+    //別エンドトリガー
+    if(game.items.length==itemList.length){
+        game.anotherEnding=true;
+    }
 }
 function union(b,a){
     const res=b.slice();
@@ -1171,7 +1321,7 @@ function spawnEnemy(pos){
         });
         spawned=true;
     }
-    if(seed>1 && Math.random()<0.01*game.goldenRate){
+    if(seed>1 && Math.random()<game.goldenRate/game.maxEnemy){
         add(pos,"golden1",{
             name:"golden_enemy",
             attribute:"enemy",
@@ -1209,7 +1359,7 @@ function spawnEnemy(pos){
         });
         spawned=true;
     }
-    if(seed==7){
+    if(seed==8){
         add(pos,"hugu",{
             name:"hugu_enemy",
             attribute:"enemy",
@@ -1220,7 +1370,7 @@ function spawnEnemy(pos){
             score:150,
             extrarange:0,
             movement:{method:"stop",speed:0.1,interval:160,timer:0,direction:[0,0],work:false},
-            rotor:{interval:120,timer:0,count:0,value:["hugu","hugu","hugu3","hugu2"]},
+            rotor:{interval:120,timer:Math.random()*120,count:math.randInt(0,3),value:["hugu","hugu","hugu3","hugu2"]},
             boom:{interval:10,timer:0,count:0,value:["hugu_boom1","hugu_boom2","hugu_boom3","hugu_boom3"]},
             boomed:false
         });
@@ -1237,8 +1387,8 @@ function spawnEnemy(pos){
             score:150,
             extrarange:0.02,
             movement:{method:"randomwalk",interval:50,timer:math.rand(0,100),direction:[0,0],work:false},
-            rotor:{interval:20,timer:0,count:0,value:["circle","circle_rot1","circle","circle_rot2"]},
-            boom:{interval:10,timer:0,count:0,value:["circle_boom1","circle_boom2","circle_boom3","circle_boom3"]},
+            rotor:{interval:20,timer:0,count:0,value:["strong_circle","strong_circle_rot1","strong_circle","strong_circle_rot2"]},
+            boom:{interval:10,timer:0,count:0,value:["strong_strong_circle_boom1","strong_circle_boom2","strong_circle_boom3","strong_circle_boom3"]},
             boomed:false
         });
         spawned=true;
@@ -1253,25 +1403,8 @@ function spawnEnemy(pos){
             score:187.5,
             extrarange:0,
             movement:{method:"jet",speed:0.12,interval:160,timer:0,direction:vecexp(1,math.randInt(0,3)*90),work:false},
-            rotor:{interval:40,timer:0,count:0,value:["jelly1","jelly2","jelly3","jelly4"]},
-            boom:{interval:10,timer:0,count:0,value:["jelly_boom1","jelly_boom2","jelly_boom3","jelly_boom3"]},
-            boomed:false
-        });
-        spawned=true;
-    }
-        if(seed==17){
-        add(pos,"hugu",{
-            name:"strong_hugu_enemy",
-            attribute:"enemy",
-            hide:false,
-            rotable:true,
-            danger:false,
-            bombable:true,
-            score:150,
-            extrarange:0,
-            movement:{method:"stop",speed:0.1,interval:70,timer:0,direction:[0,0],work:false},
-            rotor:{interval:120,timer:0,count:0,value:["hugu","hugu","hugu3","hugu2"]},
-            boom:{interval:10,timer:0,count:0,value:["hugu_boom1","hugu_boom2","hugu_boom3","hugu_boom3"]},
+            rotor:{interval:40,timer:0,count:0,value:["strong_jelly1","strong_jelly2","strong_jelly3","strong_jelly4"]},
+            boom:{interval:10,timer:0,count:0,value:["strong_jelly_boom1","strong_jelly_boom2","strong_jelly_boom3","strong_jelly_boom3"]},
             boomed:false
         });
         spawned=true;
@@ -1286,7 +1419,8 @@ function has(itemName){
 //612
 function copy2clipboard(){
     const type = "text/plain";
-    const blob = new Blob([`ダイノポーラー：時間${Math.round((Date.now()-gametime)/1000)}秒、レベル${game.phase}、スコア${game.score}`], { type });
+    var time=Math.round((Date.now()-gametime)/1000);
+    const blob = new Blob([`ダイノポーラーver1.0e　${niketa(Math.floor(time/60))}:${niketa(time%60)}、レベル${game.phase}、スコア${Math.round(game.score)}、${game.hyouka}`], { type });
     const data = [new ClipboardItem({ [type]: blob })];
   
     navigator.clipboard.write(data).then(
@@ -1298,12 +1432,44 @@ function copy2clipboard(){
       },
     );
 }
-function decision(){
+function niketa(n){
+    if(n<10){
+        return "0"+n;
+    }else{
+        return n;
+    }
+}
+function predicision(){
+    if(itemList.length==game.items.length){
+        preupgdicision();
+    }else{
+    deciding=true;
     play("てれれんアッパー",1);
+    decTimer=30;
+    add([-1,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+    if(game.items.length<itemList.length){
+    add([0,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+    add([1,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+    }
+    }
+}
+function preupgdicision(){
+    play("てれれんアッパー",1);
+    upgrading=true;
+    deciding=true;
+    play("てれれんアッパー",1);
+    decTimer=30;
+    add([-1,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+    add([0,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+    add([1,0],"cardanm3",{name:"dammyc",attribute:"util",dynamic:false},2);
+}
+function decision(){
+    entityna("dammyc",e=>{
+        deleteEntity(e.seed);
+    });
     decdisplay=[0];
     select=0;
-    deciding=true;
-    add([-1,0],"cardSelected",{attribute:"util",dynamic:false,isholder:true,available:true,disId:0},2);
+    add([-1,0],"cardSelected",{attribute:"util",dynamic:false,isholder:true,available:true,disId:0,description:"ハートをかくとくする"},2);//ここのテキストは固定
     bt="";
     ct="";
     if(game.pinkshell<10){
@@ -1312,31 +1478,50 @@ function decision(){
     if(game.conch<10){
         ct="Cant"
     }
-    add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1},2);
-    add([1,0],"card"+ct,{attribute:"util",dynamic:false,isholder:true,available:ct!="Cant",disId:2},2);
     let seed=math.randInt(0,itemList.length-1);
+    var loop=0;
+    while(game.items.indexOf(itemList[seed])!=-1){
+        seed=math.randInt(0,itemList.length-1);
+        loop++;
+        if(loop>100){
+            seed=-1;
+            break;
+        }
+    }
     add([-1,-0.1],"heart",{name:"text",attribute:"util",dynamic:false},1);
     print("text",[-1,0.1],false,["1","heart"]);
+    if(seed!=-1){
+        add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1,description:"あ"},2);
     add([0,-0.1],itemList[seed],{name:"text",attribute:"util",dynamic:false},1);
     decdisplay.push(itemList[seed]);
     print("text",[0,0.1],false,["pinkshell","1","0"]);
-    let seed2=-1;
-    while(seed2==-1 || seed2==seed){
-        seed2=math.randInt(0,itemList.length-1);
     }
+    let seed2=-1;
+    loop=0;
+    while(seed2==-1 || seed2==seed || game.items.indexOf(itemList[seed2])!=-1){
+        seed2=math.randInt(0,itemList.length-1);
+        loop++;
+        if(loop>100){
+            seed2=seed;
+            break;
+        }
+    }
+    if(seed2!=-1){
     decdisplay.push(itemList[seed2]);
+    add([1,0],"card"+ct,{attribute:"util",dynamic:false,isholder:true,available:ct!="Cant",disId:2,description:itemDescriptions[seed2]},2);
     add([1,-0.1],itemList[seed2],{name:"text",attribute:"util",dynamic:false},1);
     print("text",[1,0.1],false,["conch","1","0"]);
+    }
 }
 const upgradeList=["tidalpower","goldenSpawn","hp2","itemSpawn","enemySpawn"];
+const upgDescriptions=["タイダルパワーのさいだいすうをふやす","ゴールデンをふやす","ハートを2つかくとくする","かいやさんごのかずをふやす","てきのかずをふやす"];
 function upgradedecision(){
-    play("チャイム",1);
-    play("てれれんアッパー",1);
-    upgrading=true;
+    entityna("dammyc",e=>{
+        deleteEntity(e.seed);
+    });
     decdisplay=[0];
     select=0;
-    deciding=true;
-    add([-1,0],"cardSelected",{attribute:"util",dynamic:false,isholder:true,available:true,disId:0},2);
+    add([-1,0],"cardSelected",{attribute:"util",dynamic:false,isholder:true,available:true,disId:0,description:"ハートをかくとくする"},2);
     bt="";
     ct="";
     if(game.redcoral<5){
@@ -1345,9 +1530,8 @@ function upgradedecision(){
     if(game.redcoral<5){
         ct="Cant"
     }
-    add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1},2);
-    add([1,0],"card"+ct,{attribute:"util",dynamic:false,isholder:true,available:ct!="Cant",disId:2},2);
     let seed=math.randInt(0,upgradeList.length-1);
+    add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1,description:upgDescriptions[seed]},2);
     add([-1,-0.1],"heart",{name:"text",attribute:"util",dynamic:false},1);
     print("text",[-1,0.1],false,["1","heart"]);
     if(upgradeList[seed]=="goldenSpawn"){
@@ -1374,6 +1558,7 @@ function upgradedecision(){
     while(seed2==-1 || seed2==seed){
         seed2=math.randInt(0,upgradeList.length-1);
     }
+    add([1,0],"card"+ct,{attribute:"util",dynamic:false,isholder:true,available:ct!="Cant",disId:2,description:upgDescriptions[seed2]},2);
     decdisplay.push(upgradeList[seed2]);
     if(upgradeList[seed2]=="goldenSpawn"){
     add([1,-0.1],"golden1",{name:"text",attribute:"util",dynamic:false},1);
@@ -1395,7 +1580,17 @@ function upgradedecision(){
     }
     print("text",[1,0.1],false,["redcoral","5"]);
 }
+function barabara(text){
+    var res=[];
+    for(let k=0; k<text.length; ++k){
+        res.push(text[k]);
+    }
+    return res;
+}
 function updatedecdisplay(){
+    entityna("descriptiont",e=>{
+        deleteEntity(e.seed);
+    });
     for(const e of entity){
     if(e.info.attribute=="util"){
         if(e.info.name=="text"){
@@ -1404,6 +1599,7 @@ function updatedecdisplay(){
         if(e.info.isholder){
         if(e.info.disId==select){
             modelchange(e.seed,"cardSelected");
+            printL("descriptiont",[0,-0.7],false,barabara(e.info.description));
         }else if(e.info.available){
             modelchange(e.seed,"card");
         }
@@ -1419,6 +1615,9 @@ for(const e of entity){
 }
 }
 function selectItem(){
+    entityna("descriptiont",e=>{
+        deleteEntity(e.seed);
+    });
     play("てれれれれれん",1);
     if(select==0){
         if(game.hp<game.maxhp){
@@ -1457,8 +1656,14 @@ function selectItem(){
     game.immune.times=0;
     game.immune.timer=game.immune.interval;
     deciding=false;
+    if(game.items.length==itemList.length){
+        game.ashi=true;
+    }
 }
 function selectUpgrade(){
+    entityna("descriptiont",e=>{
+        deleteEntity(e.seed);
+    });
     play("てれれれれれん",1);
     if(select==0){
         if(game.hp<game.maxhp){
@@ -1468,7 +1673,6 @@ function selectUpgrade(){
         if(select!=0){
             game.redcoral-=5;
         }
-    game.items.push(decdisplay[select]);
     if(decdisplay[select]=="hp2"){
         for(let k=0; k<2; ++k){
         if(game.hp<game.maxhp){
@@ -1488,7 +1692,6 @@ function selectUpgrade(){
     if(decdisplay[select]=="itemSpawn"){
         game.maxItem+=2;
     }
-    //add([game.items.length/10+0.1,0.9],decdisplay[select],{attribute:"util",dynamic:false},0.3);
     }
     for(const e of entity){
         if(e.info.name=="text"){
@@ -1505,5 +1708,134 @@ function selectUpgrade(){
     game.immune.timer=game.immune.interval;
 }
 function reset(){
+    if(game.continueCount!=game.generation){
+    for(const e of entity){
+        deleteEntity(e.seed);
+    }
     game=new Game(game.generation+1);
+    light=[1,1,1];
+    prestart();
+    setBGM("BGM4",0.7,true);
+    transformed=false;
+    end=false;
+    }
+}
+async function sendmail(body){
+    const params = new URLSearchParams();
+    params.append("text", body);
+    //悪用しないでね(ほんとに)
+    const response=await fetch("https://script.google.com/macros/s/AKfycbw9TOS2iHjb98zA5qEwW6hU7nhxuMNgqK-P0EC80k-dTXeoKBqbhLTK8LtwF_hkxokyWg/exec", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+        body:params
+    });
+}
+function restartAction(){
+    const delay=30;
+    const maxcount=60;
+        if(delay<rstCount){
+        grow=1-Math.sin(Math.PI*(rstCount-delay)/maxcount);
+        }
+        /*if(titleCount%5==0){
+            entityn("startp",a=>{
+                if(a.name=="Plate"){
+                    modelchange(a.seed,"sentaku",true);
+                }else{
+                    modelchange(a.seed,"Plate",true);
+                }
+            });
+        }*/
+        rstCount++;
+        if(rstCount==delay+Math.round(maxcount/2)){
+            reset();
+        }
+        if(rstCount>delay+maxcount){
+            restarting=false;
+            rstCount=0;
+        }
+}
+function anotherEndAction(){
+    entityn("otamaend",a=>{
+                if(!transformed){
+                a.info.hide=true;
+                a.mov[1]-=0.003;
+                a.rot+=0.2;
+                a.rot*=1.03;
+                light[0]*=1/0.988;
+                light[1]*=1/0.988;
+                light[2]*=1/0.989;
+                //particle(vec.dec(a.mov,camera),1,a.rot/1000+0.1);
+                    //sg+=0.01;
+                if(a.rot>6*360){
+                    add([0,0],"カエルの過程1",{name:"endevent",attribute:"util",dynamic:false},1/(32*size));
+                    game.ending.timer1=180;
+                    game.ending.timer2=180;
+                    game.ending.timer3=180;
+                    game.ending.timer4=180;
+                    transformed=true;
+                    light[0]=0;
+                light[1]=0;
+                light[2]=0;
+                    play("てれん",1);
+                }
+                }else{
+                    //その後
+                    if(game.ending.timer1>0){
+                        game.ending.timer1--;
+                        if(game.ending.timer1==0){
+                            entityn("endevent",e=>{
+                                modelchange(e.seed,"カエルの過程2");
+                            });
+                            play("てれれん",1);
+                        }
+                    }else{
+                        if(game.ending.timer2>0){
+                            game.ending.timer2--;
+                            if(game.ending.timer2==0){
+                                entityn("endevent",e=>{
+                                    modelchange(e.seed,"カエルの過程3");
+                                });
+                                play("hidan",0.6);
+                                play("てれれれん",1);
+                            }
+                        }else{
+                            if(game.ending.timer3>0){
+                            game.ending.timer3--;
+                            if(game.ending.timer3==0){
+                                entityn("endevent",e=>{
+                                    modelchange(e.seed,"newLife");
+                                });
+                                game.ending.reproduction=true;
+                                game.ending.birth=false;
+                            }
+                        }else{
+                                //いずれかのキークリックで卵をうむ
+                                if(game.ending.birth){
+                                    game.ending.timer4--;
+                                    if(game.ending.timer4==0){
+                                        //リザルト
+                                printL("endtext",[0,-0.66],false,barabara("ダイノポーラー"));
+                                print("endtext",[0,-0.55],false,union(barabara("せいさく　"),["Yname","iname","rname","tname","yname","2"]));
+                                printL("scoredis2",[0,-0.33],false,union(["ス","コ","ア"],numbers(game.score)));
+                                printL("hyouka",[0,0.33],false,barabara(game.hyouka));
+                                print("clip",[-0.5/aspect,0.9],false,["T","キ","ー","semic","ク","リ","ッ","プ","ボ","ー","ド","に","ほ","ぞ","ん"]);
+                                print("continue?",[0.5/aspect,0.9],false,["G","キ","ー","semic","コ","ン","テ","ィ","二","ュ","ー","、","の","こ","り",""+game.continueCount-game.generation,"回"]);
+                                setBGM("BGM4",0.4,false);
+                                deleteEntity(a.seed);
+                                
+                                    }
+                                }
+                        }
+                        }
+                    }
+                }
+            });
+}
+function placeegg(){
+    play("てれれれれれん",1);
+    add([0,0],"egg",{name:"endeventEgg",attribute:"util",dynamic:false},1);
+    shinyparticle(vec.prod(camera,-1),16,0);
+    game.ending.birth=true;
 }

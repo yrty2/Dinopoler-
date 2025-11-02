@@ -16,6 +16,9 @@ body{
         c{
             color:#7ee9ff;
         }
+        #rank{
+            font-size:20px;
+        }
         #uenoyatsu{
             background-color:#aa2f00;
             outline: 10px solid #7c2300;
@@ -25,9 +28,9 @@ body{
         }
         .sidebar {
             font-size:30px;
-            position:absolute;
+            position:relative;
             width: 330px;
-            height:1500px;
+            height:100%;
             background-color: #007faa;
             box-sizing: border-box;
             border: 2px solid white;
@@ -47,6 +50,9 @@ body{
             width:120px;
             height:30px;
         }
+        #curve{
+            transform:scale(-1,1)
+        }
         #namesbm{
             background-color:#007494;
             color:azure;
@@ -56,11 +62,31 @@ body{
             width:70px;
             height:30px;
         }
+        #report{
+            background-color:#007494;
+            color:azure;
+            outline: thick double azure;
+            position:relative;
+            left:10px;
+            width:300px;
+            height:50px;
+            top:10px;
+        }
+        #reportsbm{
+            background-color:#007494;
+            color:azure;
+            outline: 3px solid azure;
+            position:relative;
+            left:20px;
+        }
+        #reportsbm:disabled {
+            background-color: gray;
+        }
         .foot{
             background-color: navy;
             border: 2px solid azure;
             left:0px;
-            top:1600px;
+            top:1750px;
             width:100%;
             position:absolute;
         }

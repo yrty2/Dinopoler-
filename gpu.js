@@ -1,3 +1,4 @@
+var grow=1;
 const multisampling=4;
 var sg=6;
 var extrasg=1;
@@ -58,7 +59,7 @@ neighbor=[];
           inst.push(0);
         }
                           //ピクセル単位の衝突判定を行う
-                          if(o.info.attribute=="enemy" || o.info.attribute=="item"){
+                          if(o.info.attribute=="enemy"){
                               if(vec.length(vec.sum(o.mov,camera))<=0.3){
                                   for(const M of model){
                                       for(const D of M.data){
@@ -110,7 +111,8 @@ context.configure({
 const WGSL=`
 struct Uniforms {
   camera : vec2<f32>,
-  aspect : vec2<f32>
+  aspect : vec2<f32>,
+  grow:f32
 }
 @binding(0) @group(0) var<uniform> uniforms : Uniforms;
 
@@ -129,7 +131,7 @@ fn rotation(v: vec2<f32>,theta: f32) -> vec2<f32>{
 @vertex
 fn main(@location(0) position: vec2<f32>,@location(1) color: vec3<f32>,@location(2) rot:f32,@location(3) movement:vec2<f32>,@location(4) model: vec2<f32>,@location(5) direction: vec2<f32>,@location(6) size:f32,@location(7) isDinamic:f32) -> VertexOutput {
   var output : VertexOutput;
-  var q=rotation((position+model)*direction,rot)*size+movement;
+  var q=rotation((position*(uniforms.grow)+model)*direction,rot)*size+movement;
   if(isDinamic==1){
   q+=uniforms.camera;
   }
@@ -169,7 +171,7 @@ new Uint16Array(indicesBuffer.getMappedRange()).set(quadIndexArray);
 indicesBuffer.unmap();
 
 //Uniformバッファ
-const uniformBufferSize = 4*(2+2);
+const uniformBufferSize = 4*(2+2+2);
   const uniformBuffer = g_device.createBuffer({
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -188,6 +190,7 @@ bufferPosition+=p.byteLength;
 }
 bind(camera);
 bind([aspect,0]);
+bind([grow]);
 
 //レンダーパイプラインの設定
 const pipeline = g_device.createRenderPipeline({
