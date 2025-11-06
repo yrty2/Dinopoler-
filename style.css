@@ -79,6 +79,9 @@ body{
             position:relative;
             left:20px;
         }
+        #intro{
+            border: 0.5rem outset #aa2f00;
+        }
         #reportsbm:disabled {
             background-color: gray;
         }
@@ -86,7 +89,7 @@ body{
             background-color: navy;
             border: 2px solid azure;
             left:0px;
-            top:1750px;
+            top:2250px;
             width:100%;
             position:absolute;
         }

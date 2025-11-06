@@ -71,13 +71,12 @@ async function parsemodels(){
     entity[entity.length-1].direction[0]*=-1;
     for(const m of modelnames){
         if(!m.preload){
-        sintyoku();
-        if(debug){
         loadModel(m.name,m.pos);
-        }else{
-        await loadModel(m.name,m.pos);
         }
-        }
+    }
+    while(model.length<modelnames.length){
+    await new Promise(resolve => setTimeout(resolve, 1));
+        sintyoku();
     }
 }
 async function preload(){

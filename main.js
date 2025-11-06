@@ -29,7 +29,7 @@ var clearValue={r:0.21,g:0.4,b:0.427,a:1.0};
 var light=[1,1,1];
 var fired=false;
 var isTitle=true;
-const distext=["scoredis","pinkshelldis","conchdis","redcoraldis","stats"];
+const distext=["scoredis","pinkshelldis","conchdis","redcoraldis","stats","tidalpowerdis"];
 var pose=false;
 var angle=0;
 var velocity=0;
@@ -46,7 +46,7 @@ var mkeys={
     submit:false
 };
 const itemList=["gem","jellygem","midnight","lightsphere","gun","fishgem"];
-const itemDescriptions=["タイダルパワーのかいふくをはやめる","タイダルパワーのしょうひがはんぶんになる","タイダルパワーのかいふくをはやめる","くらげをたおすとタイダルパワーが5かいふく","とっしんがはやくなり、よろいをかんつうする","およげるようになる"];
+const itemDescriptions=["タイダルパワーのかいふくをはやめる","タイダルパワーのしょうひがはんぶんになる","タイダルパワーのかいふくをはやめる","くらげをたおすとタイダルパワーが8%かいふく","とっしんがはやくなり、よろいをかんつうする","およげるようになる"];
 var vertex=[];
 class Game{
     constructor(generation){
@@ -784,8 +784,8 @@ timerevent(e.info.boom,a=>{
         const gain=e.info.score*multiplicationfactor;
         print("scoregain",e.mov,true,numbers(gain));
         if(has("lightsphere")){
-            if(game.tidalpower.max>=game.tidalpower.value+5){
-                game.tidalpower.value+=5;
+            if(game.tidalpower.max>=game.tidalpower.value+game.tidalpower.max*0.08){
+                game.tidalpower.value+=game.tidalpower.max*0.08;
             }else{
                 game.tidalpower.value=game.tidalpower.max;
             }
@@ -854,7 +854,11 @@ if(e.info.movement.method=="jet"){
     e.info.movement.speed*=0.94;
     e.mov=vec.sum(e.mov,vec.prod(e.info.movement.direction,e.info.movement.speed));
 }else{
+    if(e.info.name=="strong_circle_enemy"){
+    e.mov=vec.sum(e.mov,vec.prod(e.info.movement.direction,0.0075));
+    }else{
     e.mov=vec.sum(e.mov,vec.prod(e.info.movement.direction,0.005));
+    }
 }
     if(e.info.rotable){
     timerevent(e.info.rotor,a=>{
@@ -895,12 +899,14 @@ if(e.info.movement.method=="jet"){
 }
 }
 function utility(){
-        if(!end){
+    //随時更新テキスト
+    if(!end){
     print("scoredis",[0.9/aspect,-0.9],false,union(["ス","コ","ア"],numbers(game.scoreDisplay)));
     print("stats",[0.9/aspect-0.4,-0.9],false,union(["レ","ベ","ル"],numbers(game.phase)));
     print("pinkshelldis",[-1.3,0.9],false,union(["pinkshell"],numbers(game.pinkshell)));
     print("conchdis",[-1,0.9],false,union(["conch"],numbers(game.conch)));
     print("redcoraldis",[-0.7,0.9],false,union(["redcoral"],numbers(game.redcoral)));
+    print("tidalpowerdis",[0.9/aspect,0.79],false,union(numbers(100*game.tidalpower.value/game.tidalpower.max),["percent"]));
         }
     if(game.score>game.scoreDisplay){
         game.scoreDisplay+=(game.score-game.scoreDisplay)/10;
@@ -926,6 +932,7 @@ function utility(){
                 modelchange(a.seed,"cube");
             });
         }
+        if(!deciding){
         timerevent(game.combo,e=>{
             entityna("combo",a=>{
             deleteEntity(a.seed); 
@@ -941,6 +948,7 @@ function utility(){
                 a.info.hide=true;
             });
         });
+        }
     }
     if(end){
         if(game.anotherEnding){
@@ -1491,7 +1499,7 @@ function decision(){
     add([-1,-0.1],"heart",{name:"text",attribute:"util",dynamic:false},1);
     print("text",[-1,0.1],false,["1","heart"]);
     if(seed!=-1){
-        add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1,description:"あ"},2);
+        add([0,0],"card"+bt,{attribute:"util",dynamic:false,isholder:true,available:bt!="Cant",disId:1,description:itemDescriptions[seed]},2);
     add([0,-0.1],itemList[seed],{name:"text",attribute:"util",dynamic:false},1);
     decdisplay.push(itemList[seed]);
     print("text",[0,0.1],false,["pinkshell","1","0"]);
@@ -1512,6 +1520,7 @@ function decision(){
     add([1,-0.1],itemList[seed2],{name:"text",attribute:"util",dynamic:false},1);
     print("text",[1,0.1],false,["conch","1","0"]);
     }
+    updatedecdisplay();
 }
 const upgradeList=["tidalpower","goldenSpawn","hp2","itemSpawn","enemySpawn"];
 const upgDescriptions=["タイダルパワーのさいだいすうをふやす","ゴールデンをふやす","ハートを2つかくとくする","かいやさんごのかずをふやす","てきのかずをふやす"];
@@ -1579,6 +1588,7 @@ function upgradedecision(){
     add([1,-0.1],"tidalpower",{name:"text",attribute:"util",dynamic:false},1);
     }
     print("text",[1,0.1],false,["redcoral","5"]);
+    updatedecdisplay();
 }
 function barabara(text){
     var res=[];

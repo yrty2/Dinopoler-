@@ -64,23 +64,35 @@
         [Q]:ポーズ
         <hr>
         ＊Screen Shots＊※開発段階の画像です<br>
-        <img src="image/sc1.png" width=50% height=50%>
+        <img src="image/sc1.png" width=50% height=50%><br>
         <br>
         ＊お問い合わせ＊<br><!各項目に簡単なイラストとか貼りたい>
-        バグのレポートみたいなやつ。感想を書いてもいいよ<br>
-        <textarea id="report"></textarea><input type="button" id="reportsbm" value="送信" onclick="this.disabled=true; sendmail(document.getElementById('report').value)" />
+        感想を書いてもいいよ<br>
+        <textarea id="report"></textarea><input type="button" id="reportsbm" value="送信" onclick="this.disabled=true; sendmail(document.getElementById('report').value)" /><hr>
+        ＊クレジット＊<br>
+        ・せいさく<br>
+        Yirty2:スクリプト,おんがく,シェーダー,イラスト<br><br>
+        ・お世話になったもの<br>
+        webGPUAPI:グラフィック処理<br>
+        Garageband:作曲ソフト,音源<br>
+        Medly:作曲ソフト,音源<br><br>
+        その他、参考にしたすべてのゲームに感謝する<br>
+        
         </div>
         </div>
         <div class="sidebar">
         <img src="image/senzai.png" width="327" height="327"/><br>
-        Dinopoler ver1.0<c>e</c><hr>
-        リーダーボード<br><input id="nameinp" type="text" placeholder="名前を入力してください" /><input id="namesbm" type="button" value="登録" onclick="username=document.getElementById('nameinp').value" /><br>平均:<t id="mean"></t><br><t id="rank"></t>
+        <video id="intro" controls width="310"><br>
+  <source src="media/test.webm" type="video/webm" />
+</video><br>
+        Dinopoler ver1.1<c>f</c><hr>
+        リーダーボード<br><input id="nameinp" type="text" placeholder="名前を入力してください" /><input id="namesbm" type="button" value="登録" onclick="username=document.getElementById('nameinp').value; this.disabled=true" /><br>平均:<t id="mean"></t><br><t id="rank"></t>
         </div>
         <div class="foot">
                 ©2025 by Yirty2 All Rights Reserved.
         </div>
         </div>
-        <script type="text/javascript" src="mathematics.lib.js"></script>
+        <script type="text/javascript" src="../mathematics.lib.js"></script>
         <script type="text/javascript" src="webstorage.js"></script>
         <script type="text/javascript" src="proceduralBackGround.js"></script>
         <script type="text/javascript" src="modelLoader.js"></script>
