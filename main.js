@@ -208,7 +208,7 @@ async function titleScreen(){
 
     add([0.8,0],"Plate",{name:"startp",id:0},1.8);
     printL("startbtn",[0.85,0.06],false,["は","じ","め","る"]);
-    setBGM("BGM3",0.4,true);
+    setBGM("BGM3",0.8,true);
     welcome();
     console.log("何か企んでるね？");
 }
@@ -281,7 +281,7 @@ function prestart(nextgen){
 function gamestart(){
     isTitle=false;
     gametime=Date.now();
-    setBGM("BGM1",0.1,true);
+    setBGM("BGM1",0.2,true);
 }
 //アニメーションフレーム
 async function animation(){
@@ -886,7 +886,7 @@ function utility(){
                     print("clip",[-0.5/aspect,0.9],false,["T","キ","ー","semic","ク","リ","ッ","プ","ボ","ー","ド","に","ほ","ぞ","ん"])
                     print("continue?",[0.5/aspect,0.9],false,["G","キ","ー","semic","コ","ン","テ","ィ","二","ュ","ー","、","の","こ","り",""+game.continueCount-game.generation,"回"]);
                     transformed=true;
-                    setBGM("BGM2",0.4,false);
+                    setBGM("BGM2",0.5,false);
                     shinyparticle(vec.dec(a.mov,camera),6,0);
                     modelchange(a.seed,"hoya");
                 }
