@@ -165,95 +165,10 @@ pic.addEventListener("click",e=>{
     }
 });
 window.addEventListener("keydown",e=>{
-    if(game.ending.reproduction && !game.ending.birth){
-        placeegg();
-    }
-    key=e.code;
-    if(e.code=="KeyW" || e.code=="ArrowUp"){
-        mkeys.up=true;
-    }
-    if(e.code=="KeyA" || e.code=="ArrowLeft"){
-        mkeys.left=true;
-        if(deciding && decTimer==0){
-                select=math.mod(select-1,3);
-            var idd=entity.findIndex(a=>a.info.disId==select);
-            while(idd!=-1 && !entity[idd].info.available){
-                select=math.mod(select+1,3);
-                idd=entity.findIndex(a=>a.info.disId==select);
-            }
-            updatedecdisplay();
-        }
-    }
-    if(e.code=="KeyS" || e.code=="ArrowDown"){
-        mkeys.down=true;
-    }
-    if(e.code=="KeyD" || e.code=="ArrowRight"){
-        mkeys.right=true;
-        if(deciding){
-                select=math.mod(select+1,3);
-            var idd=entity.findIndex(a=>a.info.disId==select);
-            while(idd!=-1 && !entity[idd].info.available){
-                select=math.mod(select-1,3);
-                idd=entity.findIndex(a=>a.info.disId==select);
-            }
-            updatedecdisplay();
-        }
-    }
-    if(e.code=="KeyT"){
-        //game.tidalpower.range=2;
-        if(transformed){
-            copy2clipboard();
-            play("チャイム2",1);
-        }
-    }
-    if(e.code=="KeyG"){
-        if(transformed){
-        restarting=true;
-        }
-    }
-    /*if(e.code=="KeyL"){
-        game.redcoral+=20;
-        preupgdicision();
-    }*/
-    if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
-        if(!zclicked && modelLoaded){
-        submit();
-        mkeys.submit=true;
-        }
-        zclicked=true;
-    }
-    if(e.code=="KeyQ"){
-        if(initialized){
-        pose=!pose;
-        entityna("pose",a=>{
-        a.info.hide=!a.info.hide;
-    });
-        if(pose){
-            play("てれれんアッパー",1);
-        }else{
-            play("てれれんダウナー",1);
-        }
-    }
-}
+    keydowner(e);
 });
 window.addEventListener("keyup",e=>{
-    if(e.code=="KeyW" || e.code=="ArrowUp"){
-        mkeys.up=false;
-    }
-    if(e.code=="KeyA" || e.code=="ArrowLeft"){
-        mkeys.left=false;
-    }
-    if(e.code=="KeyS" || e.code=="ArrowDown"){
-        mkeys.down=false;
-    }
-    if(e.code=="KeyD" || e.code=="ArrowRight"){
-        mkeys.right=false;
-    }
-    if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
-        mkeys.submit=false;
-        zclicked=false;
-    }
-    key="";
+    keyupper(e);
 });
 function submit(){
     if(!isTitlePushed){
@@ -371,6 +286,7 @@ function gamestart(){
 //アニメーションフレーム
 async function animation(){
     BGMtest();
+    //controler();
     const delta=(Date.now()-startTime)-lastRenderTime;
   if(1000/fps<=delta){
     lastRenderTime=Date.now()-startTime;
@@ -1848,4 +1764,95 @@ function placeegg(){
     add([0,0],"egg",{name:"endeventEgg",attribute:"util",dynamic:false},1);
     shinyparticle(vec.prod(camera,-1),16,0);
     game.ending.birth=true;
+}
+function keydowner(e){
+        if(game.ending.reproduction && !game.ending.birth){
+        placeegg();
+    }
+    key=e.code;
+    if(e.code=="KeyW" || e.code=="ArrowUp"){
+        mkeys.up=true;
+    }
+    if(e.code=="KeyA" || e.code=="ArrowLeft"){
+        mkeys.left=true;
+        if(deciding && decTimer==0){
+                select=math.mod(select-1,3);
+            var idd=entity.findIndex(a=>a.info.disId==select);
+            while(idd!=-1 && !entity[idd].info.available){
+                select=math.mod(select+1,3);
+                idd=entity.findIndex(a=>a.info.disId==select);
+            }
+            updatedecdisplay();
+        }
+    }
+    if(e.code=="KeyS" || e.code=="ArrowDown"){
+        mkeys.down=true;
+    }
+    if(e.code=="KeyD" || e.code=="ArrowRight"){
+        mkeys.right=true;
+        if(deciding){
+                select=math.mod(select+1,3);
+            var idd=entity.findIndex(a=>a.info.disId==select);
+            while(idd!=-1 && !entity[idd].info.available){
+                select=math.mod(select-1,3);
+                idd=entity.findIndex(a=>a.info.disId==select);
+            }
+            updatedecdisplay();
+        }
+    }
+    if(e.code=="KeyT"){
+        //game.tidalpower.range=2;
+        if(transformed){
+            copy2clipboard();
+            play("チャイム2",1);
+        }
+    }
+    if(e.code=="KeyG"){
+        if(transformed){
+        restarting=true;
+        }
+    }
+    /*if(e.code=="KeyL"){
+        game.redcoral+=20;
+        preupgdicision();
+    }*/
+    if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
+        if(!zclicked && modelLoaded){
+        submit();
+        mkeys.submit=true;
+        }
+        zclicked=true;
+    }
+    if(e.code=="KeyQ"){
+        if(initialized){
+        pose=!pose;
+        entityna("pose",a=>{
+        a.info.hide=!a.info.hide;
+    });
+        if(pose){
+            play("てれれんアッパー",1);
+        }else{
+            play("てれれんダウナー",1);
+        }
+    }
+}
+}
+function keyupper(e){
+    if(e.code=="KeyW" || e.code=="ArrowUp"){
+        mkeys.up=false;
+    }
+    if(e.code=="KeyA" || e.code=="ArrowLeft"){
+        mkeys.left=false;
+    }
+    if(e.code=="KeyS" || e.code=="ArrowDown"){
+        mkeys.down=false;
+    }
+    if(e.code=="KeyD" || e.code=="ArrowRight"){
+        mkeys.right=false;
+    }
+    if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
+        mkeys.submit=false;
+        zclicked=false;
+    }
+    key="";
 }
