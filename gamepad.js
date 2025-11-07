@@ -38,7 +38,7 @@ function controler(){
     const c=new complex(gp.axes[0],gp.axes[1]);
         const ang=c.arg;//-pi~pi
     if(c.abs>0){
-        const ext=Math.PI*(18)/180;
+        const ext=Math.PI*(15)/180;
         gps.left=true;
         //console.log(ang/Math.PI*180);
         if(!gps.key.s && Math.PI/4-ext<=ang && ang<3*Math.PI/4+ext){
@@ -77,6 +77,10 @@ function controler(){
     
     if(c.abs==0 && gps.left){
         gps.left=false;
+        gps.key.w=false;
+        gps.key.a=false;
+        gps.key.s=false;
+        gps.key.d=false;
             keyupper({code:"KeyW"});
             keyupper({code:"KeyA"});
             keyupper({code:"KeyS"});
