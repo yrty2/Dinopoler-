@@ -26,13 +26,14 @@ function BGMtest(){
         }
     }
         //3,4,5切り替え
-    test(1,4,0.2);
-    test(4,5,0.2);
-    test(5,1,0.1);
+    test(1,4,0.5);
+    test(4,5,0.4);
+    test(5,1,0.2);
 }
 function stopBGM(){
     for(const g of BGMList){
         g.loop=false;
         g.pause();
     }
+
 }
