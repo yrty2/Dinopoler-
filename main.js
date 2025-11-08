@@ -85,7 +85,7 @@ class Game{
     this.anotherEnding=false;
     this.maxItem=100;
     this.hp=4;
-    this.continueCount=2;
+    this.continueCount=3;
     this.maxhp=4;
     this.ending={
         timer1:0,
