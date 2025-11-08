@@ -64,7 +64,7 @@ class Game{
         timer:0,
         interval:7,
         times:0,
-        ite:10
+        ite:16
     }
     this.otamamove={
         mode:0,
