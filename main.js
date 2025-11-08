@@ -46,7 +46,7 @@ var mkeys={
     submit:false
 };
 const itemList=["gem","jellygem","midnight","lightsphere","gun","fishgem"];
-const itemDescriptions=["タイダルパワーのかいふくをはやめる","タイダルパワーのしょうひがはんぶんになる","タイダルパワーのかいふくをはやめる","くらげをたおすとタイダルパワーが8%かいふく","とっしんがはやくなり、よろいをかんつうする","およげるようになる"];
+const itemDescriptions=["タイダルパワーのかいふくをはやめる","タイダルパワーのしょうひがはんぶんになる","タイダルパワーのかいふくをはやめる","くらげをたおすとタイダルパワーが8かいふく","とっしんがはやくなり、よろいをかんつうする","およげるようになる"];
 var vertex=[];
 class Game{
     constructor(generation){
@@ -64,7 +64,7 @@ class Game{
         timer:0,
         interval:7,
         times:0,
-        ite:16
+        ite:10
     }
     this.otamamove={
         mode:0,
@@ -120,6 +120,18 @@ class Game{
     this.progression=0;
     this.needed=4;
     this.phase=0;
+    this.bubble={
+        timer:0,
+        interval:5,
+        skin:["barrior1","barrior2"],
+        anime:0
+    }
+    this.feaver={
+        value:false,
+        timer:0,
+        interval:600,
+        score:0
+    }
     this.hyouka="エラー";
     this.pinkshell=0;
     this.redcoral=0;
@@ -261,6 +273,7 @@ function prestart(nextgen){
         a.info.hide=true;
     });
     add([0,0],"otama0",{name:"otama",attribute:"player",hide:false});
+    add([0,0],"barrior1",{name:"bubble",dynamic:false,attribute:"util",hide:true},1.5);
     add([-0.06,-0.2],"cube",{name:"combo1",dynamic:false,attribute:"util",hide:true},0.3);
     add([0,-0.2],"cube",{name:"combo2",dynamic:false,attribute:"util",hide:true},0.3);
     add([0.06,-0.2],"cube",{name:"combo3",dynamic:false,attribute:"util",hide:true},0.3);
@@ -281,7 +294,7 @@ function prestart(nextgen){
 function gamestart(){
     isTitle=false;
     gametime=Date.now();
-    setBGM("BGM1",0.2,true);
+    setBGM("BGM5",0.4,true);
 }
 //アニメーションフレーム
 async function animation(){
@@ -359,8 +372,40 @@ aspect=window.innerHeight/window.innerWidth;
     generateInstance();
 }
 }
+var sugoidekai=false;
 //描画毎プレイヤー設定
 function playerAction(e){
+    //フィーバータイマー
+    if(game.feaver.value){
+        timerevent(game.feaver,a=>{
+            a.value=false;
+            downerBGM();
+            entityn("bubble",b=>{
+                b.info.hide=true;
+            });
+            entityna("feavertext",b=>{
+                deleteEntity(b.seed);
+            });
+        light[0]*=1/2.4;
+        light[1]*=1/1.04;
+        light[2]*=1/0.64;
+        printL("sugoidekaimoji",[0,-0.8],false,["+",...numbers(game.feaver.score)]);
+        game.feaver.score=0;
+        sugoidekai=true;
+        });
+    }
+    if(sugoidekai){
+        entityna("sugoidekaimoji",e=>{
+            if(!e.timer){
+                e.timer=120;
+            }
+            e.timer--;
+            if(e.timer==1){
+                sugoidekai=false;
+                deleteEntity(e.seed);
+            }
+        });
+    }
     if(game.immune.value){
         if(game.immune.times==game.immune.ite){
             game.immune.value=false;
@@ -619,10 +664,10 @@ function deleteEntityi(id){
 }
 function playercirclecollision(seed,range,type){
     //別の方法に変える。
-    if(type=="point" || type=="item"){
+    if(type=="point" || type=="item" || game.feaver.value){
     for(const e of entity){
     if(e.seed==seed){
-    if(vec.length(vec.sum(camera,e.mov))<range){
+    if(vec.length(vec.sum(camera,e.mov))<range+0.24*game.feaver.value){
         return true;
     }
 }
@@ -680,7 +725,7 @@ timerevent(e.info.boom,a=>{
     }
     }else{
     if(playercirclecollision(e.seed,game.tidalpower.range+e.info.extrarange)){
-        if(mkeys.submit && game.tidalpower.value>0 && e.info.name!="tate" && (e.info.name!="hugu_enemy" || !e.info.danger)){
+        if((mkeys.submit && game.tidalpower.value>0 && e.info.name!="tate" && (e.info.name!="hugu_enemy" || !e.info.danger)) || game.feaver.value && e.info.name!="tate"){
             var sndtype="";
             var sndv=1;
             if(e.info.name=="jelly_enemy" || e.info.name=="strong_jelly_enemy"){
@@ -698,7 +743,15 @@ timerevent(e.info.boom,a=>{
             multiplicationfactor=game.combo.mulmax;
         }
         const gain=e.info.score*multiplicationfactor;
-        print("scoregain",e.mov,true,numbers(gain));
+        if(game.combo.chain<6){
+            print("scoregain",e.mov,true,numbers(gain));
+        }else{
+            if(multiplicationfactor==game.combo.mulmax){
+                print("scoregain",e.mov,true,goldnumbers(gain));
+            }else{
+                print("scoregain",e.mov,true,numbers(gain));
+            }
+        }
         if(has("lightsphere")){
             if(game.tidalpower.max>=game.tidalpower.value+game.tidalpower.max*0.08){
                 game.tidalpower.value+=game.tidalpower.max*0.08;
@@ -709,6 +762,9 @@ timerevent(e.info.boom,a=>{
         if(e.info.score==1000){
             predicision();
             //decision();
+        }
+        if(game.feaver.value){
+        game.feaver.score+=gain;
         }
         game.score+=gain;
         game.combo.chain++;
@@ -735,7 +791,7 @@ timerevent(e.info.boom,a=>{
         point(e.mov,clamp(game.combo.chain,1,4),0.1);
         }
     }
-    if(playercirclecollision(e.seed,0.1+e.info.extrarange) && !e.info.boomed){
+    if(playercirclecollision(e.seed,0.1+e.info.extrarange) && !e.info.boomed && !game.feaver.value){
         if(e.info.name!="tate" || !has("gun")){
         if(!game.hidan.trigger && !game.immune.value){
         game.hidan.trigger=true;
@@ -1025,6 +1081,12 @@ function utilAction(e){
         }
     }
 }
+    if(e.info.name=="bubble" && !e.info.hide){
+        timerevent(game.bubble,a=>{
+            a.anime=(a.anime+1)%2;
+            modelchange(e.seed,a.skin[a.anime],true);
+        });
+    }
     if(e.name=="tidalpower" && has("jellygem")){
         modelchange(e.seed,"crystalTidalpower");
     }
@@ -1118,6 +1180,25 @@ function numbers(n){
     while(p>=0){
         k++;
     a.push(Math.floor(n/(10**p))-past);
+    past=Math.floor(n/(10**p))*10;
+    p--;
+    }
+    return a;
+}
+function goldnumbers(n){
+    n=Math.round(n);
+    var u=n;
+    var p=0;
+    var k=0;
+    var past=0;
+    var a=[];
+    while(u>=10){
+        u=u/10;
+        p++;
+    }
+    while(p>=0){
+        k++;
+    a.push(`${Math.floor(n/(10**p))-past}_gold`);
     past=Math.floor(n/(10**p))*10;
     p--;
     }
@@ -1245,7 +1326,7 @@ function spawnEnemy(pos){
         });
         spawned=true;
     }
-    if(seed>1 && Math.random()<game.goldenRate/game.maxEnemy){
+    if(seed>1 && Math.random()<game.goldenRate/game.maxEnemy && !game.feaver.value){
         add(pos,"golden1",{
             name:"golden_enemy",
             attribute:"enemy",
@@ -1438,8 +1519,8 @@ function decision(){
     }
     updatedecdisplay();
 }
-const upgradeList=["tidalpower","goldenSpawn","hp2","itemSpawn","enemySpawn"];
-const upgDescriptions=["タイダルパワーのさいだいすうをふやす","ゴールデンをふやす","ハートを2つかくとくする","かいやさんごのかずをふやす","てきのかずをふやす"];
+const upgradeList=["tidalpower","goldenSpawn","hp2","itemSpawn","enemySpawn","feaver"];//33%でフィーバーがでる。
+const upgDescriptions=["タイダルパワーのさいだいすうをふやす","ゴールデンをふやす","ハートを2つかくとくする","かいやさんごのかずをふやす","てきのかずをふやす","フィーバータイム！"];
 function upgradedecision(){
     entityna("dammyc",e=>{
         deleteEntity(e.seed);
@@ -1477,6 +1558,9 @@ function upgradedecision(){
     if(upgradeList[seed]=="tidalpower"){
     add([0,-0.1],"tidalpower",{name:"text",attribute:"util",dynamic:false},1);
     }
+    if(upgradeList[seed]=="feaver"){
+    add([0,-0.1],"feaver",{name:"text",attribute:"util",dynamic:false},1);
+    }
     decdisplay.push(upgradeList[seed]);
     print("text",[0,0.1],false,["redcoral","5"]);
     let seed2=-1;
@@ -1502,6 +1586,9 @@ function upgradedecision(){
     }
     if(upgradeList[seed2]=="tidalpower"){
     add([1,-0.1],"tidalpower",{name:"text",attribute:"util",dynamic:false},1);
+    }
+    if(upgradeList[seed2]=="feaver"){
+    add([1,-0.1],"feaver",{name:"text",attribute:"util",dynamic:false},1);
     }
     print("text",[1,0.1],false,["redcoral","5"]);
     updatedecdisplay();
@@ -1617,6 +1704,24 @@ function selectUpgrade(){
     }
     if(decdisplay[select]=="itemSpawn"){
         game.maxItem+=2;
+    }
+    if(decdisplay[select]=="feaver"){
+        entityna("sugoidekaimoji",a=>{
+            deleteEntity(a.seed);
+        });
+        if(!game.feaver.value){
+        light[0]*=2.4;
+        light[1]*=1.04;
+        light[2]*=0.64;
+        game.feaver.score=0;
+        }
+        game.feaver.value=true;
+        game.feaver.timer=0;
+        upperBGM();
+        printL("feavertext",[0,-0.8],false,barabara("フィーバー！"));
+        entityn("bubble",e=>{
+            e.info.hide=false;
+        });
     }
     }
     for(const e of entity){
@@ -1812,10 +1917,10 @@ function keydowner(e){
         restarting=true;
         }
     }
-    /*if(e.code=="KeyL"){
+    if(e.code=="KeyL"){
         game.redcoral+=20;
         preupgdicision();
-    }*/
+    }
     if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
         if(!zclicked && modelLoaded){
         submit();

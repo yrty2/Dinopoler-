@@ -37,3 +37,14 @@ function stopBGM(){
     }
 
 }
+function upperBGM(){
+    for(const g of BGMList){
+        g.preservesPitch=false;
+        g.playbackRate=1.2;
+    }
+}
+function downerBGM(){
+    for(const g of BGMList){
+        g.playbackRate=1;
+    }
+}

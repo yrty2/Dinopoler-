@@ -59,7 +59,7 @@ neighbor=[];
           inst.push(0);
         }
                           //ピクセル単位の衝突判定を行う
-                          if(o.info.attribute=="enemy"){
+                          if(o.info.attribute=="enemy" && !o.info.boomed){
                               if(vec.length(vec.sum(o.mov,camera))<=0.3){
                                   for(const M of model){
                                       for(const D of M.data){

@@ -1,12 +1,12 @@
 var udemae=[
     {name:"S.さいこうのおたまじゃくし",score:20000,text:"きみはおたまじゃくしのさいのうがある"},
     {name:"A.くじらレベル",score:10000,text:"おもしろかったかい？"},
-    {name:"B.ほたるいかレベル",score:5000,text:"よかった。へいきんてんよりたかいよ"},
-    {name:"C.にまいがいレベル",score:5000,text:"やったぞ！ぼんじんレベルだ"},
+    {name:"B.ほたるいかレベル",score:4000,text:"よかった。へいきんてんよりたかいよ"},
+    {name:"C.にまいがいレベル",score:4000,text:"やったぞ！ぼんじんレベルだ"},
     {name:"D.くらげレベル",score:2000,text:"ナイストライだ"},
     {name:"E.かいようゴミレベル",score:0,text:"もうおたまじゃくしがかわいそうだ"}
 ]
-var username="無もなき"+["ヤドカリ","ウナギ","ヒトデ","ハマチ","タカアシガニ","カサゴ","スポンジ"][math.randInt(0,6)];
+var username="無もなき"+["ヤドカリ","ウナギ","ヒトデ","ハマチ","タカアシガニ","カサゴ","スポンジ","シンカイクサウオ","ハダカイワシ","ベニズワイガニ"][math.randInt(0,9)];
 let storage=window["localStorage"];
 var population=storage.getItem("population");
 var leaderboard;
