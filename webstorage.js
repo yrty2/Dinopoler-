@@ -30,9 +30,11 @@ function welcome(){
     storage.setItem("population",parseInt(population)+1);
 }
 function record(){
+    if(username!="Yirty2"){
     leaderboard.push({name:username,score:game.score});
     quickSort(leaderboard,0,leaderboard.length-1);
     storage.setItem("leaderboard",JSON.stringify(leaderboard));
+    }
 }
 async function getrecord(){
     var ran=document.getElementById("rank");
