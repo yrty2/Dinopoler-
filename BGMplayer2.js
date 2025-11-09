@@ -17,7 +17,7 @@ function setBGMsub(name,volume,loop){
     a.play();
 }
 function setBGM(name,volume,loop){
-    var divvolm=dv(volume);
+    var divvolm=dv(volume*exss);
     for(const d of divvolm){
         setBGMsub(name,d,loop);
     }
@@ -61,4 +61,5 @@ function downerBGM(){
     for(const g of BGMList){
         g.playbackRate=1;
     }
+
 }
