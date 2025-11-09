@@ -3,10 +3,10 @@ function play(name,volume){
     const a=new Audio();
     a.src=`Sounds/${name}.wav`;
     a.type="audio/wav";
-    a.volume=volume;
+    a.volume=clamp(volume*exss,0,1);
     a.play();
 }
-function setBGM(name,volume,loop){
+function setBGMsub(name,volume,loop){
     for(const g of BGMList){
         g.loop=false;
         g.currentTime=0;
@@ -14,8 +14,22 @@ function setBGM(name,volume,loop){
     }
     const a=document.getElementById(name);
     a.loop=loop;
-    a.volume=volume;
     a.play();
+}
+function setBGM(name,volume,loop){
+    var divvolm=dv(volume);
+    for(const d of divvolm){
+        setBGMsub(name,d,loop);
+    }
+}
+function dv(value){
+    var res=[];
+    while(value>1){
+        res.push(1);
+        value--;
+    }
+    res.push(value);
+    return res;
 }
 function BGMtest(){
     function test(id,to,volume){
