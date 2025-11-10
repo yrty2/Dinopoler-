@@ -1909,17 +1909,13 @@ function keydowner(e){
         //game.tidalpower.range=2;
         if(transformed){
             copy2clipboard();
-            play("チャイム2",1);
+            //play("チャイム2",1);
         }
     }
     if(e.code=="KeyG"){
         if(transformed){
         restarting=true;
         }
-    }
-    if(e.code=="KeyL"){
-        game.redcoral+=20;
-        preupgdicision();
     }
     if(e.code=="KeyZ" || e.code=="Enter" || e.code=="Space"){
         if(!zclicked && modelLoaded){
